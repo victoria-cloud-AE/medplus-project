@@ -38,39 +38,39 @@ jobs:
           docker tag mediplus-repository:${{ github.run_number }} 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
           docker push 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
 
-  # deploy:
-  #   runs-on: ubuntu-latest
-  #   needs: build-push
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-push
 
-  #   steps:
-  #     - name: Deploy to EC2
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_REGION: ${{ secrets.AWS_REGION }}
-  #       run: |
-  #         echo "${{ secrets.SSH_KEY }}" > mykey.pem
-  #         chmod 600 mykey.pem
+    steps:
+      - name: Deploy to EC2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          echo "${{ secrets.SSH_KEY }}" > mykey.pem
+          chmod 600 mykey.pem
 
-  #         ssh -o StrictHostKeyChecking=no -i mykey.pem ubuntu@44.204.111.188 << 'EOF'
-  #           echo "Starting deployment on EC2..."
-  #           sudo apt update -y
-  #           sudo apt install -y awscli docker.io
+          ssh -o StrictHostKeyChecking=no -i mykey.pem ubuntu@18.209.48.117 << 'EOF'
+            echo "Starting deployment on EC2..."
+            sudo apt update -y
+            sudo apt install -y awscli docker.io
 
-  #           echo "Logging into ECR..."
-  #           export AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}'
-  #           export AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}'
-  #           export AWS_REGION='${AWS_REGION}'
-  #           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 805301696583.dkr.ecr.us-east-1.amazonaws.com
+            echo "Logging into ECR..."
+            export AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}'
+            export AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}'
+            export AWS_REGION='${AWS_REGION}'
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 650891365688.dkr.ecr.us-east-1.amazonaws.com
 
-  #           echo "Pulling new Docker image..."
-  #           docker pull 805301696583.dkr.ecr.us-east-1.amazonaws.com/mediplus:${{ github.run_number }}
+            echo "Pulling new Docker image..."
+            docker pull 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
 
-  #           echo "Stopping old container..."
-  #           docker rm -f mediplus || true
+            # echo "Stopping old container..."
+            # docker rm -f mediplus || true
 
-  #           echo "Running new container..."
-  #           docker run -d --name mediplus -p 80:80 805301696583.dkr.ecr.us-east-1.amazonaws.com/mediplus:${{ github.run_number }}
+            echo "Running new container..."
+            docker run -d --name mediplus -p 80:80 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
 
-  #           echo "Deployment complete!"
-  #         EOF
+            echo "Deployment complete!"
+          EOF
