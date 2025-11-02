@@ -1,42 +1,42 @@
-name: CI/CD - Build and Deploy to EC2
+# name: CI/CD - Build and Deploy to EC2
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  build-push:
-    runs-on: ubuntu-latest
+# jobs:
+#   build-push:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      # # Optional caching step (using v4)
-      # - name: Cache Docker layers
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: /tmp/.buildx-cache
-      #     key: ${{ runner.os }}-buildx-${{ github.sha }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-buildx-
+#       # # Optional caching step (using v4)
+#       # - name: Cache Docker layers
+#       #   uses: actions/cache@v4
+#       #   with:
+#       #     path: /tmp/.buildx-cache
+#       #     key: ${{ runner.os }}-buildx-${{ github.sha }}
+#       #     restore-keys: |
+#       #       ${{ runner.os }}-buildx-
 
-      - name: Configure AWS credentials
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set default.region ${{ secrets.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         run: |
+#           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws configure set default.region ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 650891365688.dkr.ecr.us-east-1.amazonaws.com
+#       - name: Login to Amazon ECR
+#         run: |
+#           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 650891365688.dkr.ecr.us-east-1.amazonaws.com
 
-      - name: Build and Push Docker Image to ECR
-        run: |
-          docker build -t mediplus-repository:${{ github.run_number }} .
-          docker tag mediplus-repository:${{ github.run_number }} 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
-          docker push 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
+#       - name: Build and Push Docker Image to ECR
+#         run: |
+#           docker build -t mediplus-repository:${{ github.run_number }} .
+#           docker tag mediplus-repository:${{ github.run_number }} 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
+#           docker push 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
 
   deploy:
     runs-on: ubuntu-latest
