@@ -66,8 +66,8 @@ jobs:
             echo "Pulling new Docker image..."
             docker pull 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
 
-            # echo "Stopping old container..."
-            # docker rm -f mediplus || true
+            echo "Stopping old container..."
+            docker rm -f mediplus || true
 
             echo "Running new container..."
             docker run -d --name mediplus -p 80:80 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
