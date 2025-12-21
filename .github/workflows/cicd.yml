@@ -1,3 +1,88 @@
+name: CI/CD - Build and Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Optional caching step for Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 650891365688.dkr.ecr.us-east-1.amazonaws.com
+
+      - name: Build and Push Docker Image to ECR
+        run: |
+          docker build -t mediplus-repository:${{ github.run_number }} .
+          docker tag mediplus-repository:${{ github.run_number }} 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
+          docker push 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-push
+
+    steps:
+      - name: Deploy to EC2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Save the SSH key
+          echo "${{ secrets.SSH_KEY }}" > mykey.pem
+          chmod 600 mykey.pem
+
+          # Connect to EC2 and deploy
+          ssh -o StrictHostKeyChecking=no -i mykey.pem ubuntu@98.84.173.178 << 'EOF'
+            echo "Starting deployment on EC2..."
+            
+            # # Update system and install dependencies
+            # sudo apt update -y
+            # sudo apt install -y awscli docker.io
+
+            echo "Logging into ECR..."
+            export AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}'
+            export AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}'
+            export AWS_REGION='${AWS_REGION}'
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 650891365688.dkr.ecr.us-east-1.amazonaws.com
+            echo "Pulling new Docker image..."
+            docker pull 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
+
+            # echo "Stopping old container..."
+            # docker rm -f mediplus || true
+
+            echo "Running new container..."
+            docker run -d --name mediplus-repository -p 80:80 650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-repository:${{ github.run_number }}
+
+            echo "Deployment complete!"
+
+
+
+
+
+
+
 # name: Build and Push to ECR
 
 # on:
