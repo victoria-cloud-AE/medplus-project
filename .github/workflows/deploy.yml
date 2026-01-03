@@ -41,6 +41,8 @@ jobs:
         GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
       run: |
         git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/victoria-cloud-AE/kubernetes-Manifest.git
+        cd kubernetes-Manifest
+        ls
         cat deployment.yaml
 
         sed -i "s+650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-application:.*+650891365688.dkr.ecr.us-east-1.amazonaws.com/mediplus-application:$GITHUB_RUN_NUMBER+g" deployment.yaml
