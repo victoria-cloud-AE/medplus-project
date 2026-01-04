@@ -51,9 +51,13 @@ jobs:
         git config user.email victoriaenuma@gmail.com
         git config user.name ${GIT_USERNAME}
         git add .
-        git commit -m "Updated the k8s.yaml with new image tag"
+
+        if [ -n "$(git status --porcelain)" ]; then
+        git commit -m "Updated deployment image to ${GITHUB_RUN_NUMBER}"
         git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/victoria-cloud-AE/kubernetes-Manifest.git HEAD:main
-        
+        else
+        echo "No changes detected, skipping commit"
+        fi
       
     
       
